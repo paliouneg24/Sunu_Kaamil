@@ -1,10 +1,10 @@
 if (!window.storage) {
-  window.storage = {
-    get: async (key) => {
+  (window as any).storage = {
+    get: async (key: string) => {
       const val = localStorage.getItem(key);
       return val ? { value: val } : null;
     },
-    set: async (key, value) => {
+    set: async (key: string, value: string) => {
       localStorage.setItem(key, value);
     }
   };
@@ -37,14 +37,14 @@ const JUZ_STARTS = [
   [29,46],[33,31],[36,28],[39,32],[41,47],[46,1],[51,31],[58,1],[67,1],[78,1],
 ];
 
-function juzRange(n) {
+function juzRange(n: number) {
   const [sStart, vStart] = JUZ_STARTS[n - 1];
   const isLast = n === 30;
   const [sEnd, vEndExcl] = isLast ? [114, null] : JUZ_STARTS[n];
   const startTxt = `${sStart}: ${SOURATES[sStart - 1]}, verset ${vStart}`;
   const endTxt = isLast
     ? `${114}: ${SOURATES[113]}, fin`
-    : `${sEnd}: ${SOURATES[sEnd - 1]}, verset ${vEndExcl - 1 >= 1 ? vEndExcl - 1 : 1}`;
+    : `${sEnd}: ${SOURATES[sEnd - 1]}, verset ${vEndExcl && vEndExcl - 1 >= 1 ? vEndExcl - 1 : 1}`;
   return `${startTxt} ➔ ${endTxt}`;
 }
 
@@ -62,35 +62,35 @@ const HIZB_MID_STARTS = [
 ];
 
 const HIZB_STARTS = (() => {
-  const out = [];
+  const out: [number, number][] = [];
   for (let j = 0; j < 30; j++) { out.push(JUZ_STARTS[j]); out.push(HIZB_MID_STARTS[j]); }
   return out;
 })();
 
-function hizbRange(n) {
+function hizbRange(n: number) {
   const [sStart, vStart] = HIZB_STARTS[n - 1];
   const isLast = n === 60;
   const [sEnd, vEndExcl] = isLast ? [114, null] : HIZB_STARTS[n];
   const startTxt = `${sStart}: ${SOURATES[sStart - 1]}, verset ${vStart}`;
   const endTxt = isLast
     ? `${114}: ${SOURATES[113]}, fin`
-    : `${sEnd}: ${SOURATES[sEnd - 1]}, verset ${vEndExcl - 1 >= 1 ? vEndExcl - 1 : 1}`;
+    : `${sEnd}: ${SOURATES[sEnd - 1]}, verset ${vEndExcl && vEndExcl - 1 >= 1 ? vEndExcl - 1 : 1}`;
   return `${startTxt} ➔ ${endTxt}`;
 }
 
-function globalVerseIndex(s, v) {
+function globalVerseIndex(s: number, v: number) {
   let idx = 0;
   for (let i = 0; i < s - 1; i++) idx += VERSE_COUNTS[i];
   return idx + v;
 }
-function fromGlobalVerseIndex(idx) {
+function fromGlobalVerseIndex(idx: number): [number, number] {
   let s = 1, rem = idx;
   while (rem > VERSE_COUNTS[s - 1]) { rem -= VERSE_COUNTS[s - 1]; s++; }
   return [s, rem];
 }
 
 const NIFS_STARTS = (() => {
-  const out = [];
+  const out: [number, number][] = [];
   for (let h = 0; h < 60; h++) {
     const [s1, v1] = HIZB_STARTS[h];
     const isLastHizb = h === 59;
@@ -105,42 +105,42 @@ const NIFS_STARTS = (() => {
   return out;
 })();
 
-function nifsRange(n) {
+function nifsRange(n: number) {
   const [sStart, vStart] = NIFS_STARTS[n - 1];
   const isLast = n === 120;
   const [sEnd, vEndExcl] = isLast ? [114, null] : NIFS_STARTS[n];
   const startTxt = `${sStart}: ${SOURATES[sStart - 1]}, verset ${vStart}`;
   const endTxt = isLast
     ? `${114}: ${SOURATES[113]}, fin`
-    : `${sEnd}: ${SOURATES[sEnd - 1]}, verset ${vEndExcl - 1 >= 1 ? vEndExcl - 1 : 1}`;
+    : `${sEnd}: ${SOURATES[sEnd - 1]}, verset ${vEndExcl && vEndExcl - 1 >= 1 ? vEndExcl - 1 : 1}`;
   return `${startTxt} ➔ ${endTxt}`;
 }
 
-const TYPES = {
-  juz:     { label: "Juz",     total: 30,   unit: "Juz" },
-  hizb:    { label: "Hizb",    total: 60,   unit: "Hizb" },
-  nifs:    { label: "Nifs",    total: 120,  unit: "Nifs" },
+const TYPES: Record<string, { label: string; total: number; unit: string }> = {
+  juz:     { label: "Juz",    total: 30,   unit: "Juz" },
+  hizb:    { label: "Hizb",   total: 60,   unit: "Hizb" },
+  nifs:    { label: "Nifs",   total: 120,  unit: "Nifs" },
   sourate: { label: "Sourates", total: 114, unit: "Sourate" },
 };
 
-function unitLabel(type, n) {
+function unitLabel(type: string, n: number) {
   if (type === "sourate") return `${TYPES.sourate.unit} ${n}`;
   return `${TYPES[type].unit} ${n}`;
 }
 
-function unitSubLabel(type, n) {
+function unitSubLabel(type: string, n: number) {
   if (type === "sourate") return SOURATES[n - 1];
   return null;
 }
 
-function autoRepere(type, n) {
+function autoRepere(type: string, n: number) {
   if (type === "juz") return juzRange(n);
   if (type === "hizb") return hizbRange(n);
   if (type === "nifs") return nifsRange(n);
   return `Sourate ${n} — ${SOURATES[n - 1]}`;
 }
 
-function slugify(str) {
+function slugify(str: string) {
   return (
     str
       .toLowerCase()
@@ -162,7 +162,7 @@ const STATUS = { FREE: "libre", RESERVED: "reserve", DONE: "termine" };
 
 /* ---------- Composants ---------- */
 
-function Field({ label, hint, children }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="k-field">
       <span className="k-field-label">{label}</span>
@@ -172,7 +172,7 @@ function Field({ label, hint, children }) {
   );
 }
 
-function ProgressRing({ pct }) {
+function ProgressRing({ pct }: { pct: number }) {
   const r = 38, c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
   return (
@@ -193,7 +193,7 @@ function ProgressRing({ pct }) {
   );
 }
 
-function StatusIcon({ status }) {
+function StatusIcon({ status }: { status: string }) {
   if (status === STATUS.DONE) return <span className="k-icon k-icon-done">🟢</span>;
   if (status === STATUS.RESERVED) return <span className="k-icon k-icon-wait">⏳</span>;
   return <span className="k-icon k-icon-free">⚪</span>;
@@ -209,16 +209,16 @@ export default function SunuKamilApp() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ title: "", type: "juz", dateFin: "", heureFin: "" });
 
-  const [carnet, setCarnet] = useState(null);
+  const [carnet, setCarnet] = useState<any>(null);
   const [joinError, setJoinError] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [adminLinkCopied, setAdminLinkCopied] = useState(false);
 
-  const [reserveTarget, setReserveTarget] = useState(null);
+  const [reserveTarget, setReserveTarget] = useState<any>(null);
   const [reserveName, setReserveName] = useState("");
   const [reservePhone, setReservePhone] = useState("");
 
-  const [confirmAction, setConfirmAction] = useState(null); 
+  const [confirmAction, setConfirmAction] = useState<any>(null); 
   const [confirmPhone, setConfirmPhone] = useState("");
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -228,7 +228,7 @@ export default function SunuKamilApp() {
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap";
     document.head.appendChild(link);
-    return () => document.head.removeChild(link);
+    return () => { document.head.removeChild(link); };
   }, []);
 
   useEffect(() => {
@@ -242,12 +242,12 @@ export default function SunuKamilApp() {
     }
   }, []);
 
-  const hasSharedStorage = typeof window !== "undefined" && !!window.storage;
+  const hasSharedStorage = typeof window !== "undefined" && !!(window as any).storage;
 
-  const loadCarnet = useCallback(async (code) => {
+  const loadCarnet = useCallback(async (code: string) => {
     try {
       if (hasSharedStorage) {
-        const res = await window.storage.get(`sunukamil:${code}`, true);
+        const res = await (window as any).storage.get(`sunukamil:${code}`);
         return res ? JSON.parse(res.value) : null;
       }
       const raw = window.localStorage.getItem(`sunukamil:${code}`);
@@ -257,20 +257,20 @@ export default function SunuKamilApp() {
     }
   }, [hasSharedStorage]);
 
-  const saveCarnet = useCallback(async (c) => {
+  const saveCarnet = useCallback(async (c: any) => {
     try {
       if (hasSharedStorage) {
-        await window.storage.set(`sunukamil:${c.code}`, JSON.stringify(c), true);
+        await (window as any).storage.set(`sunukamil:${c.code}`, JSON.stringify(c));
       } else {
         window.localStorage.setItem(`sunukamil:${c.code}`, JSON.stringify(c));
       }
-    } catch (e) {
+    } catch (e: any) {
       setError("Erreur d'enregistrement : " + (e?.message || "stockage indisponible."));
       throw e;
     }
   }, [hasSharedStorage]);
 
-  const findUniqueSlug = useCallback(async (base) => {
+  const findUniqueSlug = useCallback(async (base: string) => {
     let slug = base, n = 2;
     while (await loadCarnet(slug)) { slug = `${base}-${n}`; n++; }
     return slug;
@@ -298,12 +298,12 @@ export default function SunuKamilApp() {
       setCarnet(newCarnet);
       setIsAdmin(true);
       setView("kamil");
-    } catch (e) {
+    } catch (e: any) {
       setError(e?.message || "Une erreur est survenue pendant la création du Kamil.");
     } finally { setBusy(false); }
   }
 
-  async function handleJoin(codeArg, adminTokenArg) {
+  async function handleJoin(codeArg: string, adminTokenArg: string) {
     const code = (codeArg || "").trim().toLowerCase();
     if (!code) { setJoinError("Lien invalide : aucun Kamil trouvé à cette adresse."); return; }
     setJoinError(""); setBusy(true);
@@ -338,8 +338,8 @@ export default function SunuKamilApp() {
     if (fresh) setCarnet(fresh);
   }
 
-  function openReserve(n) {
-    if (carnet.locked) return;
+  function openReserve(n: number) {
+    if (carnet?.locked) return;
     setReserveTarget(n); setReserveName(""); setReservePhone(""); setError("");
   }
 
@@ -357,7 +357,7 @@ export default function SunuKamilApp() {
         setError("Cette unité vient d'être prise par quelqu'un d'autre.");
         setCarnet(fresh); setReserveTarget(null); return;
       }
-      const updated = { ...fresh, units: fresh.units.map((u) =>
+      const updated = { ...fresh, units: fresh.units.map((u: any) =>
         u.number === reserveTarget
           ? { ...u, status: STATUS.RESERVED, name: reserveName.trim(), phone: reservePhone.trim() }
           : u
@@ -367,7 +367,7 @@ export default function SunuKamilApp() {
     } finally { setBusy(false); }
   }
 
-  function openConfirm(unitNum, kind) {
+  function openConfirm(unitNum: number, kind: string) {
     setConfirmAction({ unitNum, kind }); setConfirmPhone(""); setError("");
   }
 
@@ -380,7 +380,7 @@ export default function SunuKamilApp() {
     setBusy(true);
     try {
       const fresh = (await loadCarnet(carnet.code)) || carnet;
-      const updated = { ...fresh, units: fresh.units.map((u) => {
+      const updated = { ...fresh, units: fresh.units.map((u: any) => {
         if (u.number !== unitNum) return u;
         if (kind === "read") return { ...u, status: STATUS.DONE };
         return { ...u, status: STATUS.FREE, name: null, phone: null };
@@ -390,22 +390,22 @@ export default function SunuKamilApp() {
     } finally { setBusy(false); }
   }
 
-  async function adminReset(n) {
+  async function adminReset(n: number) {
     setBusy(true);
     try {
       const fresh = (await loadCarnet(carnet.code)) || carnet;
-      const updated = { ...fresh, units: fresh.units.map((u) =>
+      const updated = { ...fresh, units: fresh.units.map((u: any) =>
         u.number === n ? { ...u, status: STATUS.FREE, name: null, phone: null } : u
       )};
       await saveCarnet(updated); setCarnet(updated);
     } finally { setBusy(false); }
   }
 
-  async function adminMarkDone(n) {
+  async function adminMarkDone(n: number) {
     setBusy(true);
     try {
       const fresh = (await loadCarnet(carnet.code)) || carnet;
-      const updated = { ...fresh, units: fresh.units.map((u) =>
+      const updated = { ...fresh, units: fresh.units.map((u: any) =>
         u.number === n ? { ...u, status: STATUS.DONE } : u
       )};
       await saveCarnet(updated); setCarnet(updated);
@@ -423,9 +423,9 @@ export default function SunuKamilApp() {
 
   const stats = useMemo(() => {
     if (!carnet) return { free: 0, reserved: 0, done: 0, pct: 0 };
-    const free = carnet.units.filter((u) => u.status === STATUS.FREE).length;
-    const reserved = carnet.units.filter((u) => u.status === STATUS.RESERVED).length;
-    const done = carnet.units.filter((u) => u.status === STATUS.DONE).length;
+    const free = carnet.units.filter((u: any) => u.status === STATUS.FREE).length;
+    const reserved = carnet.units.filter((u: any) => u.status === STATUS.RESERVED).length;
+    const done = carnet.units.filter((u: any) => u.status === STATUS.DONE).length;
     const pct = Math.round((done / carnet.units.length) * 100);
     return { free, reserved, done, pct };
   }, [carnet]);
@@ -575,7 +575,7 @@ export default function SunuKamilApp() {
           {error && <p className="k-error">{error}</p>}
 
           <div className="k-grid">
-            {carnet.units.map((u) => (
+            {carnet.units.map((u: any) => (
               <div key={u.number} className={`k-unit k-status-${u.status}`}>
                 <div className="k-unit-left">
                   <StatusIcon status={u.status} />
@@ -596,12 +596,10 @@ export default function SunuKamilApp() {
                   {isAdmin && u.phone && <div className="k-unit-phone">Tél. {u.phone}</div>}
                 </div>
                 <div className="k-unit-actions">
-                  {/* Part libre : tout le monde peut la prendre */}
                   {u.status === STATUS.FREE && !carnet.locked && (
                     <button className="k-mini-btn k-mini-primary" onClick={() => openReserve(u.number)}>Prendre</button>
                   )}
 
-                  {/* Part réservée : L'admin a le contrôle direct (Lu / Libérer), et la personne peut décliner/valider avec son tel */}
                   {u.status === STATUS.RESERVED && (
                     isAdmin ? (
                       <>
@@ -618,7 +616,6 @@ export default function SunuKamilApp() {
                     )
                   )}
 
-                  {/* Part terminée : Seul l'admin peut la libérer si besoin */}
                   {u.status === STATUS.DONE && isAdmin && !carnet.locked && (
                     <button className="k-mini-btn k-mini-danger" onClick={() => adminReset(u.number)}>Libérer</button>
                   )}
@@ -629,7 +626,6 @@ export default function SunuKamilApp() {
         </div>
       )}
 
-      {/* Modale réservation */}
       {reserveTarget && (
         <div className="k-modal-overlay" onClick={() => setReserveTarget(null)}>
           <div className="k-modal" onClick={(e) => e.stopPropagation()}>
@@ -652,7 +648,6 @@ export default function SunuKamilApp() {
         </div>
       )}
 
-      {/* Modale confirmation (lecture / déclin) */}
       {confirmAction && (
         <div className="k-modal-overlay" onClick={() => setConfirmAction(null)}>
           <div className="k-modal" onClick={(e) => e.stopPropagation()}>
@@ -747,29 +742,26 @@ const CSS = `
 
 .k-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 
-.k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
-.k-unit { background: #fff; border: 1px solid #E1E6E2; border-radius: 10px; padding: 14px; display: flex; align-items: flex-start; gap: 12px; transition: border-color .2s; }
-.k-unit.k-status-termine { background: #F4F9F6; border-color: #B5D6C1; }
-.k-unit.k-status-reserve { background: #FCF9F0; border-color: #E6D298; }
-
-.k-unit-left { font-size: 16px; padding-top: 2px; }
+.k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.k-unit { background: #fff; border: 1px solid #E1E6E2; border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px; }
+.k-unit-left { font-size: 20px; }
 .k-unit-body { flex: 1; min-width: 0; }
-.k-unit-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 2px; }
-.k-unit-num { font-weight: 700; font-size: 15px; color: #0A3A2A; }
+.k-unit-top { display: flex; align-items: center; gap: 8px; }
+.k-unit-num { font-weight: 600; font-size: 15px; color: #0A3A2A; }
 .k-unit-arabic { font-family: 'Amiri', serif; font-size: 16px; color: #C5A059; }
-.k-unit-name { font-weight: 600; font-size: 14px; color: #16241E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.k-unit-empty { font-size: 13px; color: #8A8F7E; font-style: italic; }
-.k-unit-repere { font-size: 12px; color: #6B7268; margin-top: 3px; line-height: 1.3; }
+.k-unit-name { font-size: 14px; font-weight: 500; color: #16241E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-unit-empty { font-size: 13px; color: #8A8F7E; }
+.k-unit-repere { font-size: 12px; color: #6B7268; margin-top: 2px; }
 .k-unit-phone { font-size: 11px; color: #8A8F7E; margin-top: 2px; }
+.k-unit-actions { display: flex; gap: 6px; }
 
-.k-unit-actions { display: flex; flex-direction: column; gap: 6px; }
 .k-mini-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; white-space: nowrap; }
-.k-mini-primary { background: #0A3A2A; color: #fff; }
-.k-mini-primary:hover { background: #072B1F; }
+.k-mini-primary { background: #EAF3EC; color: #1B5E3B; }
+.k-mini-primary:hover { background: #D6E8DB; }
 .k-mini-danger { background: #FBEBE7; color: #A23B2E; }
-.k-mini-danger:hover { background: #F6D8D2; }
+.k-mini-danger:hover { background: #F7D7D2; }
 
-.k-modal-overlay { position: fixed; inset: 0; background: rgba(10, 22, 18, 0.5); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
-.k-modal { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+.k-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+.k-modal { background: #fff; border-radius: 14px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 .k-modal h3 { margin-bottom: 12px; }
-`
+`;
